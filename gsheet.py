@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os.path
+import prettytable as pt
 
 """"
 from google.auth.transport.requests import Request
@@ -10,6 +11,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
+
 
 # The ID of the spreadsheet.
 SPREADSHEET_ID = '1fcliNUUDbhKN3Ua7HYGng4mtm-vwQhUtOGCYLP-JQf8'
@@ -21,7 +23,7 @@ def get_sheet():
     # 'https://www.googleapis.com/auth/drive'
     ]
     credentials = service_account.Credentials.from_service_account_file('credentials-google.json', scopes=scopes)
-    gsheet_service = build('sheets', 'v4', credentials=credentials)
+    gsheet_service = build('sheets', 'v4', credentials=credentials, cache_discovery=False)
     sheet = gsheet_service.spreadsheets()
     return sheet
 
@@ -45,7 +47,19 @@ def get_data():
             return
     except HttpError as err:
         print(err)
-    return column_names, data
+
+    table = pt.PrettyTable(['Date', 'Payer', 'Item', 'Cost', 'Beneficiary'])
+    table.align['Date'] = 'l'
+    table.align['Payer'] = 'l'
+    table.align['Item'] = 'l'
+    table.align['Cost'] = 'r'
+    table.align['Beneficiary'] = 'l'
+
+    for date, payer, item, cost, beneficiary in data[-10:]:
+        table.add_row([date, payer, item, f'{float(cost):.0f}', beneficiary])
+
+    # return column_names, data
+    return table
 
 
 def print_track_list():
@@ -56,7 +70,7 @@ def print_track_list():
                                 column_names[0][2],
                                 column_names[0][3],
                                 column_names[0][4]))
-    for row in data:
+    for row in data[-10:]:
         table += ('%s\t %s\t %s\t %s\t %s\n' % (row[0],
                                     row[1],
                                     row[2],

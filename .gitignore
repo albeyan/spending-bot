@@ -1,2 +1,5 @@
 credentials-google.json
 credentials-telegram.json
+example.py
+img.png
+__pycache__/
