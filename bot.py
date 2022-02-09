@@ -52,16 +52,26 @@ def caps(update: Update, context: CallbackContext):
 def last(update: Update, context: CallbackContext):
     # table = gsheet.print_track_list()
     # context.bot.send_message(chat_id=update.effective_chat.id, text=table, parse_mode='HTML')
-    table = gsheet.get_data()
+    table = gsheet.print_last_items()
     # update.message.reply_text(f'<pre>{table}</pre>', parse_mode=ParseMode.HTML)
     
     # img = imgkit.from_string(f'<pre>{table}</pre>', False, 'out.jpg')
 
     hti = Html2Image()
-    hti.screenshot(html_str=f'<pre>{table}</pre>', save_as='img.png', size=(449, 222))
+    hti.screenshot(html_str=f'<pre>{table}</pre>', save_as='img.png', size=(522, 222))
     update.message.reply_photo(photo=open('img.png', 'rb'))
 
     # update.message.reply_photo(photo=open('out.jpg', 'rb'))
+
+
+def delete_item(update: Update, context: CallbackContext):
+    response = update.message.text
+    if len(context.args) == 1:
+        id = context.args[0]
+        gsheet.delete_item(id)
+        update.message.reply_text('Item deleted.')
+    else:
+        update.message.reply_text('Usage: "/delete 14"\n\nNo item was deleted.')
 
 
 # Adds item with text
@@ -226,6 +236,9 @@ def main():
     
     expenses_list_handler = CommandHandler('last', last)
     dispatcher.add_handler(expenses_list_handler)
+    
+    delete_item_handler = CommandHandler('delete', delete_item)
+    dispatcher.add_handler(delete_item_handler)
 
 # Conversation handler for adding items with full options
     payer_regex = '^(Her|Isa)$'

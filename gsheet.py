@@ -12,7 +12,6 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
 
-
 # The ID of the spreadsheet.
 SPREADSHEET_ID = '1fcliNUUDbhKN3Ua7HYGng4mtm-vwQhUtOGCYLP-JQf8'
 
@@ -31,12 +30,12 @@ def get_sheet():
 def get_data():
     sheet = get_sheet()
 
-    column_names_range = 'Sheet1!A1:E1'
-    data_range = 'Sheet1!A2:E'
+    # column_names_range = 'Sheet1!A1:F1'
+    data_range = 'Sheet1!A2:F'
     try:
-        column_names_result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
-                                    range=column_names_range).execute()
-        column_names = column_names_result.get('values', [])
+        # column_names_result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
+        #                             range=column_names_range).execute()
+        # column_names = column_names_result.get('values', [])
 
         data_result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
                                     range=data_range).execute()
@@ -48,51 +47,78 @@ def get_data():
     except HttpError as err:
         print(err)
 
-    table = pt.PrettyTable(['Date', 'Payer', 'Item', 'Cost', 'Beneficiary'])
+    # return column_names, data
+    return data
+
+
+def print_last_items():
+    data = get_data()
+
+    table = pt.PrettyTable(['Id', 'Date', 'Payer', 'Item', 'Cost', 'Beneficiary'])
+    table.align['Id'] = 'r'
     table.align['Date'] = 'l'
     table.align['Payer'] = 'l'
     table.align['Item'] = 'l'
     table.align['Cost'] = 'r'
     table.align['Beneficiary'] = 'l'
 
-    for date, payer, item, cost, beneficiary in data[-10:]:
-        table.add_row([date, payer, item, f'{float(cost):.0f}', beneficiary])
-
-    # return column_names, data
-    return table
-
-
-def print_track_list():
-    column_names, data = get_data()
-    table = ""
-    table += ('%s\t %s\t %s\t %s\t %s\n' % (column_names[0][0],
-                                column_names[0][1],
-                                column_names[0][2],
-                                column_names[0][3],
-                                column_names[0][4]))
     for row in data[-10:]:
-        table += ('%s\t %s\t %s\t %s\t %s\n' % (row[0],
-                                    row[1],
-                                    row[2],
-                                    row[3],
-                                    row[4]))
+        id = row[0]
+        if len(row) == 1:
+            table.add_row([id, '', '', '', '', ''])
+        else:
+            date = row[1]
+            payer = row[2]
+            item = row[3]
+            cost = row[4]
+            beneficiary = row[5]
+            table.add_row([id, date, payer, item[:12], f'{float(cost):.0f}', beneficiary])
+
     return table
+
+
+# def print_track_list():a
+#     column_names, data = get_data()
+#     table = ""
+#     table += ('%s\t %s\t %s\t %s\t %s\n' % (column_names[0][0],
+#                                 column_names[0][1],
+#                                 column_names[0][2],
+#                                 column_names[0][3],
+#                                 column_names[0][4]))
+#     for row in data[-10:]:
+#         table += ('%s\t %s\t %s\t %s\t %s\n' % (row[0],
+#                                     row[1],
+#                                     row[2],
+#                                     row[3],
+#                                     row[4]))
+#     return table
+
+
+def delete_item(id):
+    sheet = get_sheet()
+    range = f'Sheet1!B{id}:G{id}'
+    sheet.values().clear(spreadsheetId=SPREADSHEET_ID, range=range).execute()
 
 
 def add_item(date, payer, item, cost, beneficiary):
     sheet = get_sheet()
+    last_id = list(get_sheet().values().get(spreadsheetId=SPREADSHEET_ID, range='Sheet1!A2:A').execute().values())[2][-1][0]
+    print(last_id)
+    id = str(int(last_id) + 1)
+    notes = ''
 
     body = {
         "majorDimension": "ROWS",
-        "values": [[date, payer, item, cost, beneficiary]],
+        "values": [[id, date, payer, item, cost, beneficiary, notes]],
     }
     sheet.values().append(
         spreadsheetId=SPREADSHEET_ID,
-        range="Sheet1!A1:E1",
+        range="Sheet1!A1:G1",
         valueInputOption='USER_ENTERED',
         body=body).execute()
 
 
 if __name__ == '__main__':
-    # add_item()
-    print(print_track_list())
+    # add_item('2022-02-09', 'Herni', 'Vuelos', '240500', 'Both')
+    # print(print_track_list())
+    pass
