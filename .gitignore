@@ -3,3 +3,4 @@ credentials-telegram.json
 example.py
 img.png
 __pycache__/
+config.json

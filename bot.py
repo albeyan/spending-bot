@@ -1,12 +1,7 @@
 """ To do:
-set inline? https://core.telegram.org/bots/inline
-
 Possible problems:
 If a user changes their Telegram name
-
-
 """
-
 
 import logging
 import gsheet
@@ -25,6 +20,11 @@ from telegram.ext import (
     CallbackContext,
 )
 
+with open("config.json", "r") as read_file:
+        config = json.load(read_file)
+
+PLAYER_1 = config['player_1']
+PLAYER_2 = config['player_2']
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -42,6 +42,33 @@ logger = logging.getLogger(__name__)
 
 # def echo(update: Update, context: CallbackContext):
 #     context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
+
+
+def get_debt(update: Update, context: CallbackContext):
+    debt = gsheet.calculate_debt()
+    response = f"{PLAYER_1} owes {debt[PLAYER_1]} to {PLAYER_2}\n" \
+             + f"{PLAYER_2} owes {debt[PLAYER_2]} to {PLAYER_1}"
+    update.message.reply_text(response)
+
+
+def settle_debt(update: Update, context: CallbackContext):
+    debt = gsheet.calculate_debt()
+
+    if debt[PLAYER_1] <= 0 and debt[PLAYER_2] > 0:
+        payer = PLAYER_2
+        beneficiary = PLAYER_1
+    elif debt[PLAYER_2] <= 0 and debt[PLAYER_1] > 0:
+        payer = PLAYER_1
+        beneficiary = PLAYER_2
+    else:
+        update.message.reply_text("There's no debt to settle.")
+        return
+    
+    date = datetime.today().strftime('%Y-%m-%d')
+    item = 'Deuda'
+    cost = debt[payer]
+    gsheet.add_item(date, payer, item, cost, beneficiary)
+    update.message.reply_text(f"{payer} has paid {cost} to {beneficiary}.")
 
 
 def caps(update: Update, context: CallbackContext):
@@ -65,7 +92,7 @@ def last(update: Update, context: CallbackContext):
 
 
 def delete_item(update: Update, context: CallbackContext):
-    response = update.message.text
+    # response = update.message.text
     if len(context.args) == 1:
         id = context.args[0]
         gsheet.delete_item(id)
@@ -119,7 +146,7 @@ def date(update: Update, context: CallbackContext) -> int:
     context.user_data["item"] = {}
     context.user_data["item"]["date"] = date
 
-    reply_keyboard = [['Her', 'Isa']]
+    reply_keyboard = [[PLAYER_1, PLAYER_2]]
 
     update.message.reply_text(
         'Who paid?',
@@ -162,7 +189,7 @@ def cost(update: Update, context: CallbackContext) -> int:
     logger.info("Cost: %s", response)
     context.user_data["item"]["cost"] = response
 
-    reply_keyboard = [['Her', 'Both', 'Isa']]
+    reply_keyboard = [[PLAYER_1, 'Both', PLAYER_2]]
 
     update.message.reply_text(
         'Who is this for? Both means 50/50.',
@@ -218,12 +245,8 @@ def unknown(update: Update, context: CallbackContext):
 
 
 def main():
-
-    with open("credentials-telegram.json", "r") as read_file:
-        telegram_data = json.load(read_file)
-
     # Create the Updater and pass it your bot's token.
-    updater = Updater(telegram_data['token'])
+    updater = Updater(config['telegram_token'])
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
@@ -237,15 +260,21 @@ def main():
     expenses_list_handler = CommandHandler('last', last)
     dispatcher.add_handler(expenses_list_handler)
     
+    get_debt_handler = CommandHandler('debt', get_debt)
+    dispatcher.add_handler(get_debt_handler)
+    
+    settle_debt_handler = CommandHandler('settle', settle_debt)
+    dispatcher.add_handler(settle_debt_handler)
+    
     delete_item_handler = CommandHandler('delete', delete_item)
     dispatcher.add_handler(delete_item_handler)
 
 # Conversation handler for adding items with full options
-    payer_regex = '^(Her|Isa)$'
+    payer_regex = f'^({PLAYER_1}|{PLAYER_2})$'
     date_regex = ''
-    beneficiary_regex = '^(Her|Isa|Both)$'
+    beneficiary_regex = f'^({PLAYER_1}|{PLAYER_2}|Both)$'
     
-    conv_handler = ConversationHandler(
+    add_item_handler = ConversationHandler(
         entry_points=[CommandHandler('add_item', add_item)],
         states={
             DATE: [MessageHandler(Filters.text, date)],
@@ -257,7 +286,7 @@ def main():
         fallbacks=[CommandHandler('cancel', cancel)],
     )
 
-    dispatcher.add_handler(conv_handler)
+    dispatcher.add_handler(add_item_handler)
 
     invalid_text_handler = MessageHandler(Filters.text, invalid_text)
     dispatcher.add_handler(invalid_text_handler)  # This handler must be added last
