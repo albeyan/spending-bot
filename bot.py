@@ -7,10 +7,9 @@ import logging
 import gsheet
 import json
 from datetime import datetime, timedelta
-import imgkit
 from html2image import Html2Image
 
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update, ForceReply, ParseMode
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -26,22 +25,10 @@ with open("config.json", "r") as read_file:
 PLAYER_1 = config['player_1']
 PLAYER_2 = config['player_2']
 
+DATE, PAYER, ITEM, COST, BENEFICIARY = range(5)
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-# def start(update: Update, context: CallbackContext):
-#     user = update.effective_user
-#     context.bot.send_message(chat_id=update.effective_chat.id, text=f"Hi {user.first_name}!")
-#     # comment this below
-#     update.message.reply_markdown_v2(
-#         fr'Hi {user.mention_markdown_v2()}\!',
-#         reply_markup=ForceReply(selective=True),
-#     )
-    
-
-# def echo(update: Update, context: CallbackContext):
-#     context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
 
 
 def get_debt(update: Update, context: CallbackContext):
@@ -73,32 +60,26 @@ def settle_debt(update: Update, context: CallbackContext):
 
 def caps(update: Update, context: CallbackContext):
     text_caps = ' '.join(context.args).upper()
-    context.bot.send_message(chat_id=update.effective_chat.id, text=update.effective_user.first_name)
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                            text=update.effective_user.first_name)
 
 
 def last(update: Update, context: CallbackContext):
-    # table = gsheet.print_track_list()
-    # context.bot.send_message(chat_id=update.effective_chat.id, text=table, parse_mode='HTML')
     table = gsheet.print_last_items()
-    # update.message.reply_text(f'<pre>{table}</pre>', parse_mode=ParseMode.HTML)
-    
-    # img = imgkit.from_string(f'<pre>{table}</pre>', False, 'out.jpg')
-
     hti = Html2Image()
-    hti.screenshot(html_str=f'<pre>{table}</pre>', save_as='img.png', size=(522, 222))
+    hti.screenshot(html_str=f'<pre>{table}</pre>',
+                    save_as='img.png', size=(522, 222))
     update.message.reply_photo(photo=open('img.png', 'rb'))
-
-    # update.message.reply_photo(photo=open('out.jpg', 'rb'))
 
 
 def delete_item(update: Update, context: CallbackContext):
-    # response = update.message.text
     if len(context.args) == 1:
         id = context.args[0]
         gsheet.delete_item(id)
         update.message.reply_text('Item deleted.')
     else:
-        update.message.reply_text('Usage: "/delete 14"\n\nNo item was deleted.')
+        update.message.reply_text('Usage: "/delete 14"\n\n'
+                                + 'No item was deleted.')
 
 
 # Adds item with text
@@ -111,9 +92,6 @@ def add_quick(update: Update, context: CallbackContext):
     gsheet.add_item(date, payer, item, cost, beneficiary)
 
 
-DATE, PAYER, ITEM, COST, BENEFICIARY = range(5)
-
-
 def add_item(update: Update, context: CallbackContext) -> int:
     """Starts by asking the date of the expense"""
     reply_keyboard = [['Today', 'Yesterday']]
@@ -122,7 +100,9 @@ def add_item(update: Update, context: CallbackContext) -> int:
         'Insert the date of the expense in yyyy-mm-dd.\n\n'
         'Send /cancel to stop.',
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, input_field_placeholder='yyyy-mm-dd'
+            reply_keyboard,
+            one_time_keyboard=True,
+            input_field_placeholder='yyyy-mm-dd'
         ),
     )
 
@@ -237,11 +217,13 @@ def cancel(update: Update, context: CallbackContext) -> int:
 
 
 def invalid_text(update: Update, context: CallbackContext):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Invalid option.")
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                            text="Invalid option.")
 
 
 def unknown(update: Update, context: CallbackContext):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                            text="Sorry, I didn't understand that command.")
 
 
 def main():
@@ -281,18 +263,21 @@ def main():
             PAYER: [MessageHandler(Filters.regex(payer_regex), payer)],
             ITEM: [MessageHandler(Filters.text, item)],
             COST: [MessageHandler(Filters.text, cost)],
-            BENEFICIARY: [MessageHandler(Filters.regex(beneficiary_regex) & ~Filters.command, beneficiary)]
+            BENEFICIARY: [MessageHandler(Filters.regex(beneficiary_regex)
+                                        & ~Filters.command, beneficiary)]
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
 
     dispatcher.add_handler(add_item_handler)
 
-    invalid_text_handler = MessageHandler(Filters.text, invalid_text)
-    dispatcher.add_handler(invalid_text_handler)  # This handler must be added last
-
+    # This handler must be added last
     unknown_handler = MessageHandler(Filters.command, unknown)
-    dispatcher.add_handler(unknown_handler)  # This handler must be added last
+    dispatcher.add_handler(unknown_handler)
+
+    # This handler must be added last
+    invalid_text_handler = MessageHandler(Filters.text, invalid_text)
+    dispatcher.add_handler(invalid_text_handler)
 
     # Start the Bot
     updater.start_polling()
@@ -300,3 +285,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    

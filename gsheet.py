@@ -1,16 +1,7 @@
-from __future__ import print_function
-
-import os.path
-import this
 import prettytable as pt
 import json
 import pandas as pd
 
-""""
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-"""
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
@@ -24,12 +15,11 @@ PLAYER_2 = config['player_2']
 
 
 def get_sheet():
-    scopes = [
-    'https://www.googleapis.com/auth/spreadsheets',
-    # 'https://www.googleapis.com/auth/drive'
-    ]
-    credentials = service_account.Credentials.from_service_account_file('credentials-google.json', scopes=scopes)
-    gsheet_service = build('sheets', 'v4', credentials=credentials, cache_discovery=False)
+    scopes = ['https://www.googleapis.com/auth/spreadsheets']
+    credentials = service_account.Credentials \
+        .from_service_account_file('credentials-google.json', scopes=scopes)
+    gsheet_service = build('sheets', 'v4',
+                            credentials=credentials, cache_discovery=False)
     sheet = gsheet_service.spreadsheets()
     return sheet
 
@@ -55,7 +45,8 @@ def get_data():
 def print_last_items():
     data = get_data()[1:]
 
-    table = pt.PrettyTable(['Id', 'Date', 'Payer', 'Item', 'Cost', 'Beneficiary'])
+    table = pt.PrettyTable(['Id', 'Date', 'Payer', 'Item',
+                            'Cost', 'Beneficiary'])
     table.align['Id'] = 'r'
     table.align['Date'] = 'l'
     table.align['Payer'] = 'l'
@@ -73,7 +64,8 @@ def print_last_items():
             item = row[3]
             cost = row[4]
             beneficiary = row[5]
-            table.add_row([id, date, payer, item[:12], f'{float(cost):.0f}', beneficiary])
+            table.add_row([id, date, payer, item[:12],
+                            f'{float(cost):.0f}', beneficiary])
 
     return table
 
@@ -94,23 +86,6 @@ def calculate_debt():
     return debt
 
 
-# def print_track_list():a
-#     column_names, data = get_data()
-#     table = ""
-#     table += ('%s\t %s\t %s\t %s\t %s\n' % (column_names[0][0],
-#                                 column_names[0][1],
-#                                 column_names[0][2],
-#                                 column_names[0][3],
-#                                 column_names[0][4]))
-#     for row in data[-10:]:
-#         table += ('%s\t %s\t %s\t %s\t %s\n' % (row[0],
-#                                     row[1],
-#                                     row[2],
-#                                     row[3],
-#                                     row[4]))
-#     return table
-
-
 def delete_item(id):
     row = int(id) + 1
     sheet = get_sheet()
@@ -120,7 +95,9 @@ def delete_item(id):
 
 def add_item(date, payer, item, cost, beneficiary):
     sheet = get_sheet()
-    last_id = list(get_sheet().values().get(spreadsheetId=SPREADSHEET_ID, range='Sheet1!A2:A').execute().values())[2][-1][0]
+    last_id = (list(get_sheet().values()
+        .get(spreadsheetId=SPREADSHEET_ID, range='Sheet1!A2:A')
+        .execute().values())[2][-1][0])
     id = str(int(last_id) + 1)
     notes = ''
 
@@ -136,8 +113,4 @@ def add_item(date, payer, item, cost, beneficiary):
 
 
 if __name__ == '__main__':
-    # add_item('2022-02-09', 'Herni', 'Vuelos', '240500', 'Both')
-    # print(print_track_list())
-
     pass
-    
