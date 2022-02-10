@@ -1,7 +1,6 @@
 import prettytable as pt
 import json
 import pandas as pd
-
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2 import service_account

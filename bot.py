@@ -8,7 +8,6 @@ import gsheet
 import json
 from datetime import datetime, timedelta
 from html2image import Html2Image
-
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
     Updater,
@@ -291,6 +290,7 @@ def main():
     # Start the Bot
     updater.start_polling()
     updater.idle()
+
 
 if __name__ == '__main__':
     main()
