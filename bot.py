@@ -33,20 +33,30 @@ logger = logging.getLogger(__name__)
 
 def get_debt(update: Update, context: CallbackContext):
     debt = gsheet.calculate_debt()
-    response = f"{PLAYER_1} owes {debt[PLAYER_1]} to {PLAYER_2}\n" \
-             + f"{PLAYER_2} owes {debt[PLAYER_2]} to {PLAYER_1}"
+    
+    if PLAYER_1 in debt.keys():
+        debtor = PLAYER_1
+        creditor = PLAYER_2
+    elif PLAYER_2 in debt.keys():
+        debtor = PLAYER_2
+        creditor = PLAYER_1
+    else:
+        update.message.reply_text('Nobody owes money.')
+        return
+
+    response = f"{debtor} owes {debt[debtor]} to {creditor}" 
     update.message.reply_text(response)
 
 
 def settle_debt(update: Update, context: CallbackContext):
     debt = gsheet.calculate_debt()
 
-    if debt[PLAYER_1] <= 0 and debt[PLAYER_2] > 0:
-        payer = PLAYER_2
-        beneficiary = PLAYER_1
-    elif debt[PLAYER_2] <= 0 and debt[PLAYER_1] > 0:
+    if PLAYER_1 in debt.keys():
         payer = PLAYER_1
         beneficiary = PLAYER_2
+    elif PLAYER_2 in debt.keys():
+        payer = PLAYER_2
+        beneficiary = PLAYER_1
     else:
         update.message.reply_text("There's no debt to settle.")
         return
@@ -285,4 +295,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    

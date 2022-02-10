@@ -80,8 +80,10 @@ def calculate_debt():
     paid = df.groupby('Payer')['Cost'].sum()
     benefit = df.groupby('Beneficiary')['Cost'].sum()
 
-    debt[PLAYER_1] = benefit[PLAYER_1] + benefit['Both']/2 - paid[PLAYER_1]
-    debt[PLAYER_2] = benefit[PLAYER_2] + benefit['Both']/2 - paid[PLAYER_2]
+    for player in [PLAYER_1, PLAYER_2]:
+        player_debt = benefit[player] + benefit['Both']/2 - paid[player]
+        if player_debt > 0:
+            debt[player] = player_debt
 
     return debt
 
