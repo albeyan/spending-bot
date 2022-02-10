@@ -68,12 +68,6 @@ def settle_debt(update: Update, context: CallbackContext):
     update.message.reply_text(f"{payer} has paid {cost} to {beneficiary}.")
 
 
-def caps(update: Update, context: CallbackContext):
-    text_caps = ' '.join(context.args).upper()
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                            text=update.effective_user.first_name)
-
-
 def last(update: Update, context: CallbackContext):
     table = gsheet.print_last_items()
     hti = Html2Image()
@@ -90,6 +84,11 @@ def delete_item(update: Update, context: CallbackContext):
     else:
         update.message.reply_text('Usage: "/delete 14"\n\n'
                                 + 'No item was deleted.')
+
+
+def delete_last(update: Update, context: CallbackContext):
+    gsheet.delete_last()
+    update.message.reply_text('The last item was deleted.')
 
 
 # Adds item with text
@@ -243,9 +242,6 @@ def main():
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
 
-    caps_handler = CommandHandler('caps', caps)
-    dispatcher.add_handler(caps_handler)
-
     add_quick_handler = CommandHandler('add', add_quick)
     dispatcher.add_handler(add_quick_handler)
     
@@ -260,6 +256,9 @@ def main():
     
     delete_item_handler = CommandHandler('delete', delete_item)
     dispatcher.add_handler(delete_item_handler)
+    
+    delete_last_handler = CommandHandler('delete_last', delete_last)
+    dispatcher.add_handler(delete_last_handler)
 
 # Conversation handler for adding items with full options
     payer_regex = f'^({PLAYER_1}|{PLAYER_2})$'

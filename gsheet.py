@@ -95,6 +95,16 @@ def delete_item(id):
     sheet.values().clear(spreadsheetId=SPREADSHEET_ID, range=range).execute()
 
 
+def delete_last():
+    sheet = get_sheet()
+    last_id = (list(get_sheet().values()
+        .get(spreadsheetId=SPREADSHEET_ID, range='Sheet1!A2:A')
+        .execute().values())[2][-1][0])
+    row = int(last_id) + 1
+    range = f'Sheet1!A{row}:G{row}'
+    sheet.values().clear(spreadsheetId=SPREADSHEET_ID, range=range).execute()
+
+
 def add_item(date, payer, item, cost, beneficiary):
     sheet = get_sheet()
     last_id = (list(get_sheet().values()
