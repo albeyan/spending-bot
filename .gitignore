@@ -1,5 +1,3 @@
-credentials-google.json
-credentials-telegram.json
 img.png
 __pycache__/
-config.json
+.gitignore_old
