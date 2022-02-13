@@ -21,7 +21,7 @@ from telegram.ext import (
 PLAYER_1 = os.environ["PLAYER_1"]
 PLAYER_2 = os.environ["PLAYER_2"]
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
-BROWSER_PATH = os.envirok["GOOGLE_CHROME_SHIM"]
+BROWSER_PATH = os.environ["GOOGLE_CHROME_SHIM"]  # Change to GOOGLE_CHROME_BIN in local env
 
 DATE, PAYER, ITEM, COST, BENEFICIARY = range(5)
 
