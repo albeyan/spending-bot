@@ -1,3 +1,4 @@
+import os
 import prettytable as pt
 import json
 import pandas as pd
@@ -5,18 +6,16 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
 
-with open("config.json", "r") as read_file:
-        config = json.load(read_file)
-
-SPREADSHEET_ID = config['spreadsheet_id']
-PLAYER_1 = config['player_1']
-PLAYER_2 = config['player_2']
+SPREADSHEET_ID = os.environ["SPREADSHEET_ID"]
+PLAYER_1 = os.environ["PLAYER_1"]
+PLAYER_2 = os.environ["PLAYER_2"]
+GOOGLE_APPLICATION_CREDENTIALS = json.loads(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
 
 
 def get_sheet():
     scopes = ['https://www.googleapis.com/auth/spreadsheets']
     credentials = service_account.Credentials \
-        .from_service_account_file('credentials-google.json', scopes=scopes)
+        .from_service_account_info(GOOGLE_APPLICATION_CREDENTIALS, scopes=scopes)
     gsheet_service = build('sheets', 'v4',
                             credentials=credentials, cache_discovery=False)
     sheet = gsheet_service.spreadsheets()

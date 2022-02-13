@@ -1,3 +1,7 @@
+credentials-google.json
+credentials-telegram.json
 img.png
 __pycache__/
-.gitignore_old
+config.json
+credential-google-env.txt
+test.py

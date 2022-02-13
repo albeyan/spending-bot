@@ -2,7 +2,7 @@
 Possible problems:
 If a user changes their Telegram name
 """
-
+import os
 import logging
 import gsheet
 import json
@@ -18,11 +18,9 @@ from telegram.ext import (
     CallbackContext,
 )
 
-with open("config.json", "r") as read_file:
-        config = json.load(read_file)
-
-PLAYER_1 = config['player_1']
-PLAYER_2 = config['player_2']
+PLAYER_1 = os.environ["PLAYER_1"]
+PLAYER_2 = os.environ["PLAYER_2"]
+TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 
 DATE, PAYER, ITEM, COST, BENEFICIARY = range(5)
 
@@ -236,7 +234,7 @@ def unknown(update: Update, context: CallbackContext):
 
 def main():
     # Create the Updater and pass it your bot's token.
-    updater = Updater(config['telegram_token'])
+    updater = Updater(TELEGRAM_TOKEN)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
