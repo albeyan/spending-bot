@@ -21,6 +21,7 @@ from telegram.ext import (
 PLAYER_1 = os.environ["PLAYER_1"]
 PLAYER_2 = os.environ["PLAYER_2"]
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
+BROWSER_PATH = os.envirok["GOOGLE_CHROME_SHIM"]
 
 DATE, PAYER, ITEM, COST, BENEFICIARY = range(5)
 
@@ -67,7 +68,7 @@ def settle_debt(update: Update, context: CallbackContext):
 
 def last(update: Update, context: CallbackContext):
     table = gsheet.print_last_items()
-    hti = Html2Image()
+    hti = Html2Image(browser_executable=BROWSER_PATH)
     hti.screenshot(html_str=f'<pre>{table}</pre>',
                     save_as='img.png', size=(522, 222))
     update.message.reply_photo(photo=open('img.png', 'rb'))
