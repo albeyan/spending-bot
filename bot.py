@@ -70,8 +70,8 @@ def last(update: Update, context: CallbackContext):
     table = gsheet.print_last_items()
     hti = Html2Image(browser_executable=BROWSER_PATH)
     hti.screenshot(html_str=f'<pre>{table}</pre>',
-                    save_as='img.png', size=(522, 222))
-    update.message.reply_photo(photo=open('img.png', 'rb'))
+                    save_as='tmp/img.png', size=(522, 222))
+    update.message.reply_photo(photo=open('tmp/img.png', 'rb'))
 
 
 def delete_item(update: Update, context: CallbackContext):
